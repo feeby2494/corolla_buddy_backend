@@ -13,12 +13,12 @@ class Work_Order(models.Model):
     #repair_list = 1-to-Many Back Ref: This back-ref should be defined by Django
     user = models.ForeignKey(
         User,
-        related_name='work_orders',
+        related_name='work_order_list',
         on_delete=models.CASCADE,
     )
     sales_order = models.ForeignKey(
         'Sales_Order',
-        related_name='work_orders',
+        related_name='work_order_list',
         on_delete=models.CASCADE,
     )
     slug = models.SlugField()
