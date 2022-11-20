@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'djoser',
 
     'product',
+    'repair_service',
 ]
 
 CORS_ALLOWED_ORIGINS = [

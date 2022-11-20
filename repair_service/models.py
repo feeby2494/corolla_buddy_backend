@@ -1,21 +1,81 @@
 from io import BytesIO
 from PIL import Image
 
-from django.contrib.auth.models import User
+from django.conf import settings
 
 from django.core.files import File
 from django.db import models
 
+
+# Individual Repair
+class Repair(models.Model):
+    work_order = models.ForeignKey(
+        'Work_Order',
+        related_name='repair_list',
+        on_delete=models.CASCADE,
+    )
+    completed = models.BooleanField(default=False)
+    #tech_id = will tie into user that has a tech role
+    received_date = models.DateTimeField()
+    finished_date = models.DateTimeField()
+    shipping_order = models.ForeignKey(
+        'Shipping_Order',
+        related_name='repair_list',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return str(self.id)
+
+################ Will Need To Intergrate with Detrack/Fedex/USPS later ######
+
+# Not tied to work order or sales order; can have any repair on here
+class Shipping_Order(models.Model):
+    service = models.CharField(max_length=90)
+    tracking = models.IntegerField()
+
+# Individual job that are on one individual repair
+class Repair_Job(models.Model):
+    diagnosed_date = models.DateTimeField()
+    repair = models.ForeignKey(
+        'repair',
+        related_name='repair_job_list',
+        on_delete=models.CASCADE,
+    )
+
+########## Inventory System ###########################
+
+# an intance of one single part that can be used on a repair
+class Part_Instance(models.Model):
+    part = models.ForeignKey(
+        'Part',
+        related_name='part_instance_list',
+        on_delete=models.CASCADE,
+    )
+    defective = models.BooleanField(default=False)
+    used = models.BooleanField(default=False)
+    broken_by_tech = models.BooleanField(default=False)
+    repair_job = models.ForeignKey(
+        'Repair_Job',
+        related_name='part_used_list',
+        on_delete=models.CASCADE,
+    )
+
+class Part(models.Model):
+    name = models.CharField(max_length=90)
+
+
+# One order with one or more Repairs on it
 class Work_Order(models.Model):
     completed = models.BooleanField(default=False)
     submitted_date = models.DateTimeField(auto_now_add=True)
 
     #repair_list = 1-to-Many Back Ref: This back-ref should be defined by Django
-    user = models.ForeignKey(
-        User,
-        related_name='work_order_list',
-        on_delete=models.CASCADE,
-    )
+    # user = models.ForeignKey(
+    #     settings.AUTH_USER_MODEL,
+    #     related_name='work_order_list',
+    #     on_delete=models.CASCADE,
+    # )
     sales_order = models.ForeignKey(
         'Sales_Order',
         related_name='work_order_list',
@@ -23,42 +83,54 @@ class Work_Order(models.Model):
     )
     slug = models.SlugField()
 
+    def ready(self):
+        slug = self.id
+
     class Meta:
-        ordering = ('name',)
+        ordering = ('submitted_date',)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
     def get_absolute_url(self):
         return f'/{self.slug}/'
 
+############### Sales System ###################
+
+# The invoice order for one or more work orders
 class Sales_Order(models.Model):
     #revenue_item_list = 1-to-Many Back Ref
     #expenditure_item_list = 1-to-Many Back Ref
     #work_order_list = 1-to-Many Back Ref
-    total_profit = models.FloatField()
-    slug = models.SlugField()
+    total_profit = models.FloatField(default=0.00)
+    slug = models.SlugField(blank=True, null=True)
+
+    def ready(self):
+        slug = self.id
 
     def calculate_total(self):
-        # Don't understand how we reference back relationships
-        # total = 0.00
-        # for item in revenue_item_list:
-        #   total += item.total
-        # for item in expenditure_item_list:
-        #   total -= item.total
-        #return total
-        pass
+        # This is how you can reference reverse relationships!
+        total = 0.00
+        for item in self.revenue_item_list.all():
+            total += item.total
+        for item in self.expenditure_item_list.all():
+            total -= item.total
+        total = round(total, 2)
+        return total
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
     # Should I tie this in to work order's slug?
     def get_absolute_url(self):
         return f'/{self.slug}/'
 
+### Should Rev_Items and Exp_Items be tied to a part instance and/or repair_job?
+
+
 class Expenditure_Item(models.Model):
     name = models.CharField(max_length=60)
-    description = models.CharField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     total = models.FloatField()
 
     sales_order = models.ForeignKey(
@@ -73,7 +145,7 @@ class Expenditure_Item(models.Model):
 
 class Revenue_Item(models.Model):
     name = models.CharField(max_length=60)
-    description = models.CharField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     total = models.FloatField()
 
     sales_order = models.ForeignKey(
@@ -84,6 +156,49 @@ class Revenue_Item(models.Model):
 
     def __str__(self):
         return self.name
+
+################# Accounting System: with Sales Orders and non-Sales Orders: ###
+
+
+# Not tied to repair; Example: gas, food, supplies, monthly bill, etc
+class Non_Sales_Order(models.Model):
+    total_profit = models.FloatField(default=0.00)
+    slug = models.SlugField(blank=True, null=True)
+
+    def ready(self):
+        slug = self.id
+
+    def calculate_total(self):
+        # This is how you can reference reverse relationships!
+        total = 0.00
+        for item in self.revenue_item_list.all():
+            total += item.total
+        for item in self.expenditure_item_list.all():
+            total -= item.total
+        total = round(total, 2)
+        return total
+
+    def __str__(self):
+        return str(self.id)
+
+    # Should I tie this in to work order's slug?
+    def get_absolute_url(self):
+        return f'/{self.slug}/'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # For Reference Only:
 
