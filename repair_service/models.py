@@ -63,6 +63,59 @@ class Part_Instance(models.Model):
 
 class Part(models.Model):
     name = models.CharField(max_length=90)
+    def __str__(self):
+        return self.name
+
+class Part_Repair_Type_Association(models.Model):
+    repair_type = models.ForeignKey(
+        Repair_Type,
+        on_delete=models.CASCADE
+    )
+    part = models.ForeignKey(
+        Part,
+        on_delete=models.CASCADE
+    )
+
+class Repair_Type(models.Model):
+    name = models.CharField(max_length=90)
+    parts = models.ManyToManyField(
+        Part,
+        through='Part_Repair_Type_Association'
+    )
+    model = models.ForeignKey(
+        'Model',
+        related_name='repair_type_list',
+        on_delete=models.CASCADE
+    )
+    def __str__(self):
+        return self.name
+
+class Inventory(models.Model):
+    part = models.ForeignKey(
+        'part',
+        related_name='inventory_list',
+        on_delete=models.CASCADE
+    )
+    location = models.ForeignKey(
+        'Location',
+        related_name='inventory_list',
+        on_delete=models.CASCADE
+    )
+    count = models.IntegerField(default=0)
+
+class Location(models.Model):
+    name = models.CharField(max_length=90)
+
+class Model(models.Model):
+    name = models.CharField(max_length=90)
+    brand = models.ForeignKey(
+        'Brand',
+        related_name='model_list',
+        on_delete=models.CASCADE
+    )
+
+class Brand(models.Model):
+    name = models.CharField(max_length=60)
 
 
 # One order with one or more Repairs on it
