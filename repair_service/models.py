@@ -9,6 +9,10 @@ from django.db import models
 
 # Individual Repair
 class Repair(models.Model):
+    # Do we need these tied to the Brand and Model tables?
+    brand = models.CharField(max_length=50)
+    model = models.CharField(max_length=50)
+    serial = models.CharField(max_length=60)
     work_order = models.ForeignKey(
         'Work_Order',
         related_name='repair_list',
@@ -66,16 +70,6 @@ class Part(models.Model):
     def __str__(self):
         return self.name
 
-class Part_Repair_Type_Association(models.Model):
-    repair_type = models.ForeignKey(
-        Repair_Type,
-        on_delete=models.CASCADE
-    )
-    part = models.ForeignKey(
-        Part,
-        on_delete=models.CASCADE
-    )
-
 class Repair_Type(models.Model):
     name = models.CharField(max_length=90)
     parts = models.ManyToManyField(
@@ -89,6 +83,16 @@ class Repair_Type(models.Model):
     )
     def __str__(self):
         return self.name
+
+class Part_Repair_Type_Association(models.Model):
+    repair_type = models.ForeignKey(
+        Repair_Type,
+        on_delete=models.CASCADE
+    )
+    part = models.ForeignKey(
+        Part,
+        on_delete=models.CASCADE
+    )
 
 class Inventory(models.Model):
     part = models.ForeignKey(
