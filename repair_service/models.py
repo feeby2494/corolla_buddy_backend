@@ -242,6 +242,10 @@ class Non_Sales_Order(models.Model):
     def get_absolute_url(self):
         return f'/{self.slug}/'
 
+################# Customer Contact: ###
+
+
+################# Customer Address: ###
 
 
 
