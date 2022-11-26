@@ -40,6 +40,7 @@ class Shipping_Order(models.Model):
 
 # Individual job that are on one individual repair
 class Repair_Job(models.Model):
+    name = models.CharField(max_length=60)
     diagnosed_date = models.DateTimeField()
     repair = models.ForeignKey(
         'repair',
