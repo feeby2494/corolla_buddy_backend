@@ -20,12 +20,15 @@ class Repair(models.Model):
     )
     completed = models.BooleanField(default=False)
     #tech_id = will tie into user that has a tech role
-    received_date = models.DateTimeField()
-    finished_date = models.DateTimeField()
+    received_date = models.DateTimeField(null=True, blank=True)
+    finished_date = models.DateTimeField(null=True, blank=True)
     shipping_order = models.ForeignKey(
         'Shipping_Order',
         related_name='repair_list',
         on_delete=models.CASCADE,
+        null=True, 
+        blank=True,
+        db_constraint=False
     )
 
     def __str__(self):
@@ -37,10 +40,12 @@ class Repair(models.Model):
 class Shipping_Order(models.Model):
     service = models.CharField(max_length=90)
     tracking = models.IntegerField()
+    #repair_list
+    
 
 # Individual job that are on one individual repair
 class Repair_Job(models.Model):
-    name = models.CharField(max_length=60)
+    name = models.CharField(max_length=60, null=True, blank=True)
     diagnosed_date = models.DateTimeField()
     repair = models.ForeignKey(
         'repair',
@@ -127,7 +132,7 @@ class Brand(models.Model):
 class Work_Order(models.Model):
     completed = models.BooleanField(default=False)
     submitted_date = models.DateTimeField(auto_now_add=True)
-
+    delivery_method = models.CharField(max_length=90, default="local")
     #repair_list = 1-to-Many Back Ref: This back-ref should be defined by Django
     # user = models.ForeignKey(
     #     settings.AUTH_USER_MODEL,
@@ -138,6 +143,9 @@ class Work_Order(models.Model):
         'Sales_Order',
         related_name='work_order_list',
         on_delete=models.CASCADE,
+        null=True, 
+        blank=True, 
+        db_constraint=False
     )
     slug = models.SlugField()
 
@@ -244,10 +252,51 @@ class Non_Sales_Order(models.Model):
         return f'/{self.slug}/'
 
 ################# Customer Contact: ###
+class CustomerContact(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=16)
+    work_order = models.ForeignKey(
+        'Work_Order',
+        related_name='customer_contact_list',
+        on_delete=models.CASCADE,
+    )
+    sales_order = models.ForeignKey(
+        'Sales_Order',
+        related_name='customer_contact_list',
+        on_delete=models.CASCADE,
+        null=True, 
+        blank=True, 
+        db_constraint=False
+    )
 
+    def __str__(self):
+        return str(self.email)
 
 ################# Customer Address: ###
+class CustomerAddress(models.Model):
+    street_line_one = models.CharField(max_length=60)
+    street_line_two = models.CharField(max_length=10)
+    city = models.CharField(max_length=60)
+    state = models.CharField(max_length=30)
+    zip = models.CharField(max_length=10)
+    work_order = models.ForeignKey(
+        'Work_Order',
+        related_name='customer_address_list',
+        on_delete=models.CASCADE,
+    )
+    sales_order = models.ForeignKey(
+        'Sales_Order',
+        related_name='customer_address_list',
+        on_delete=models.CASCADE,
+        null=True, 
+        blank=True, 
+        db_constraint=False
+    )
 
+    def __str__(self):
+        return str(f"{self.street_line_one} {self.street_line_two} {self.city}")
 
 
 
