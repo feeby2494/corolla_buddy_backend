@@ -11,10 +11,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-<<<<<<< HEAD
-./venv
-=======
 ./venv
 
 venv
->>>>>>> 5e53cf6 (Started on repair_service app. Not included in "INSTALLED_APPS" yet.)
+
+/repair_service/.env

@@ -133,6 +133,7 @@ class Work_Order(models.Model):
     completed = models.BooleanField(default=False)
     submitted_date = models.DateTimeField(auto_now_add=True)
     delivery_method = models.CharField(max_length=90, default="local")
+    collection_date = models.DateTimeField(null=True, blank=True)
     #repair_list = 1-to-Many Back Ref: This back-ref should be defined by Django
     # user = models.ForeignKey(
     #     settings.AUTH_USER_MODEL,
